@@ -1,0 +1,101 @@
+﻿
+======================================================================
+TEST 1 -- FULL TICKET INGESTION & ROW ACCOUNTING
+======================================================================
+  raw         : 2,559,899
+  kept        : 2,559,710
+  expected    : 2,559,710
+  [PASS] Row accounting closes -- every row traced back to its exclusion reason
+
+======================================================================
+TEST 2 -- MISSING vehicle_number HANDLING
+======================================================================
+  total rows          : 2,559,710
+  vehicle_number null : 1,242,097 (48.52%)
+  vehicle_number blank: 0
+  distinct vehicles   : 6,809
+  [PASS] missing_vehicle_number documented at 48.52% -- kept as a coverage stat, never imputed
+  Tickets w/ vehicle id: 1,317,613
+  [PASS] No chart claims individual vehicle occupancy -- all aggregations are by route+segment
+
+======================================================================
+TEST 3 -- INVALID / UNMATCHED STOP NAMES
+======================================================================
+  empty normalised starts: 0
+  empty normalised ends  : 0
+  unique normalised stop labels (start+end) : 11,989
+  ali village -> kapashera border: 0 options
+  [WARN] No fuzzy match returned -- could be expected for very rare stop pairs
+
+======================================================================
+TEST 4 -- BOARDING STOP *BEFORE* DESTINATION (valid direction)
+======================================================================
+  boarding < destination : 2,555,702  (used in segment loads)
+  boarding > destination : 4,008   (rejected)
+  boarding = destination : 0      (impossible -- already dropped upstream)
+  unknown stops          : 0
+  [PASS] Equal ranks impossible -- filter upstream is correct (same_origin==destination dropped)
+  [PASS] Back-tracked count in segment_meta matches observed reverse-direction tickets
+
+======================================================================
+TEST 5 -- BOARDING STOP *AFTER* DESTINATION (back-tracked)
+======================================================================
+  'mahipal pur village' -> 'ali village': 0 options
+  message: 'No direct option found between the selected stops. We do not invent transfers ΓÇö supply GTFS to enable multi-leg search.'
+  [PASS] Back-tracked pair yields no options; planner explains why instead of fabricating
+
+======================================================================
+TEST 6 -- OPPOSITE ROUTE DIRECTIONS
+======================================================================
+  'ali village' -> 'mahamaya flyover west' found routes: ['34AUP', '34UP', '8UP', '443DOWN']
+  [PASS] Found the natural-direction route '8UP'
+  'kalindi kunj border' -> 'crown plaza' found routes: ['8ADOWN']
+  [PASS] Found the natural-direction route '8ADOWN'
+  [PASS] Option load sum 22259.0 traceable to segments parquet (route 544DOWN total = 162,974)
+  [PASS] Option load sum 3307.0 traceable to segments parquet (route 511UP total = 25,190)
+  [PASS] Option load sum 11.0 traceable to segments parquet (route GURGAON TO BADARPUR BORDER DOWN total = 90)
+  [PASS] Option load sum 65945.0 traceable to segments parquet (route 717AUP total = 459,803)
+  [PASS] Option load sum 32399.0 traceable to segments parquet (route 717BUP total = 192,816)
+
+======================================================================
+TEST 7 -- DUPLICATE / REPEATED STOPS
+======================================================================
+  # distinct (route, dir, start, end) keys with duplicates: 237,806
+  duplicate rows above: 2,159,673
+  These are correctly *aggregated* by load_engine (sum of passenger_count, count of tickets)
+  [PASS]   0114(NS)UP/up/'azadpur'->'wazirpur depot': 3 dup tickets, 3 pax aggregated correctly
+  [PASS]   0114(NS)UP/up/'gtb nagar'->'wazirpur depot': 4 dup tickets, 4 pax aggregated correctly
+  [PASS]   0114(NS)UP/up/'jd block pitam pur'->'budh vihar': 3 dup tickets, 3 pax aggregated correctly
+
+======================================================================
+TEST 8 -- EMPTY FILTERS / INVALID ORIGIN-DEST SELECTION
+======================================================================
+  [PASS] Same origin/destination returns no options + clear message
+  [PASS] Empty origin and destination gracefully handled
+  [PASS] Unknown stop name gracefully handled with no fabrication
+
+======================================================================
+TEST 9 -- MISSING GTFS FILES
+======================================================================
+  GTFS folder: data\gtfs exists? False
+  [PASS] GTFS folder absent -- planner uses ticket-derived topology and UI says so clearly
+
+======================================================================
+TEST 10 -- SEGMENT PASSENGER-LOAD CALCULATION (validity)
+======================================================================
+  [PASS] No negative loads (rows checked: 66,947)
+  total passenger-journeys       : 2,753,403
+  total passenger-segments       : 34,755,511
+  ratio (avg segments per trip)  : 12.62
+  [PASS] Per-ticket expansion: 12.62 segments on average is consistent with Delhi bus routes
+  meta input_rows : 2,559,710
+  sum of used+skipped: 2,559,710
+  [PASS] Used + skipped + unknown = input -- every cleaned row reaches one of three buckets
+  Sample 717AUP: 'badarpur m b road'           ->'tughalqabad village'           pax=1  n_segs=4  expected_add=4
+  [PASS] Manual trace: expected expansion matches planner's per-segment load total
+
+======================================================================
+FAILURES : 0
+WARNINGS : 1
+  - No fuzzy match returned -- could be expected for very rare stop pairs
+======================================================================

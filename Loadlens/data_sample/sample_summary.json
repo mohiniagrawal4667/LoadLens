@@ -1,0 +1,25 @@
+{
+  "sample_rows": 25000,
+  "sample_routes_kept": 60,
+  "full_dq_snapshot": {
+    "source_path": "C:/Users/Asus/.deepai-code/userdata/attachments/54fde7c9-6f42-427b-a1c4-39e48f442c5d-3301a2d7-9f2c-4556-8986-2a4aa5fe58b5-parquet.parquet",
+    "raw_rows": 2559899,
+    "kept_rows": 2559710,
+    "dropped_missing_core": 0,
+    "dropped_nonpositive_passenger_count": 0,
+    "dropped_nonpositive_passenger_count_observed": 0,
+    "dropped_same_origin_and_destination": 189,
+    "missing_vehicle_number": 0,
+    "missing_vehicle_number_count": 1242097,
+    "missing_vehicle_number_pct": 48.52491102507706,
+    "unique_routes": 2259,
+    "unique_normalized_starts": 6073,
+    "unique_normalized_ends": 5916,
+    "date_min": "2026-09-30",
+    "date_max": "2026-10-31",
+    "distinct_vehicles_with_id": 6809,
+    "passenger_count_min": 1,
+    "passenger_count_max": 6,
+    "passenger_count_mean": 1.0756699001058714
+  }
+}
